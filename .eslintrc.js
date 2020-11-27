@@ -31,5 +31,6 @@ module.exports = {
     //关闭禁止混用tab和空格
     "no-mixed-spaces-and-tabs": [0],
     camelcase: 'off',
+    "no-unused-vars":'off'
   }
 };

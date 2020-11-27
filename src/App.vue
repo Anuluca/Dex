@@ -5,6 +5,7 @@
       <router-link to="/about">About</router-link>
     </div>
     <router-view />
+    <div style="position:fixed;bottom:10px;text-align:center;width:100%;font-size:12px">©2020 Anuluca.</div>
   </div>
 </template>
 

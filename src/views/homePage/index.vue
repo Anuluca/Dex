@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <el-button type="primary" @click="addLibQa">点击展开问答</el-button>
+    <el-button type="primary" @click="addLibQa" style="margin-top:20px">点击展开问答</el-button>
     <el-drawer
       title=""
       :visible.sync="qaDrawer"
