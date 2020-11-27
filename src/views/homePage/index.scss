@@ -1,0 +1,21 @@
+.search-drawer{
+    .el-drawer__header{
+        margin-bottom: 15px;
+        span{
+            outline:none
+        }
+    }
+}
+.el-drawer__body{
+    margin:0 20px 20px;
+    display:flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex:1
+}
+.el-select{
+    margin-right: 10px;
+}
+.el-drawer:focus {
+    outline: none;
+}

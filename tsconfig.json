@@ -25,7 +25,8 @@
       "dom",
       "dom.iterable",
       "scripthost"
-    ]
+    ],
+    "target": "es2015"
   },
   "include": [
     "src/**/*.ts",

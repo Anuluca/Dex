@@ -1,0 +1,321 @@
+<!-- 题目搜索框开始 -->
+<div style="height: 100%;">
+  <el-tabs v-model="activeName" class="qaModel" @tab-click="removeCurRow()">
+    <!-- 问题tab -->
+    <el-tab-pane label="选择问题" name="first">
+      <!-- 搜索框 -->
+      <el-form ref="showForm" :model="showForm">
+        <el-input
+          placeholder="请输入内容"
+          v-model="showForm.input"
+          class="input-with-select"
+          @keyup.enter.native="questionSearch"
+          clearable
+        >
+          <el-button
+            slot="append"
+            icon="el-icon-search"
+            @click="questionSearch"
+            clearable
+          ></el-button>
+        </el-input>
+        <!-- 标签栏 -->
+        <div class="search_by_types">
+          <el-checkbox v-model="showChecked" @change="changeSearchWay(1)" style="margin-right: 10px;">
+            <b>基于标签搜索：</b>
+          </el-checkbox>
+          <location-level
+            v-model="showForm.value1show"
+            :ifDisabled="optionQuestion"
+            @change="changeShowArea"
+          >
+          </location-level>
+          <el-select
+            v-model="showForm.value2"
+            placeholder="项目阶段"
+            size="small"
+            :disabled="optionQuestion"
+            @change="questionSearch"
+            filterable
+            clearable
+          >
+            <el-option
+              v-for="item in qaPhase"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            >
+            </el-option>
+          </el-select>
+          <el-select
+            v-model="showForm.value3"
+            placeholder="报告期"
+            size="small"
+            :disabled="optionQuestion"
+            @change="questionSearch"
+            filterable
+            clearable
+          >
+            <el-option v-for="item in pickerOptions" :key="item" :value="item">
+            </el-option>
+          </el-select>
+          <el-switch
+            v-model="showForm.value4"
+            active-text="问答模板"
+            @change="questionSearch"
+            :disabled="optionQuestion"
+          ></el-switch>
+          <el-button @click="resetForm('showForm')" class="reset" size="medium"
+            >重置</el-button
+          >
+        </div>
+      </el-form>
+      <!-- 搜索结果 -->
+      <template>
+        <el-table
+          :data="showColumns"
+          tooltip-effect="dark"
+          style="width: 100%;"
+          :show-header="false"
+          :height="tableHeight"
+          @row-click="handdle"
+          @select="handleSelectionChange"
+          ref="scroll"
+          stripe
+          v-loading="questionLoading"
+          class="search_result ques_r"
+        >
+          <el-table-column
+            type="selection"
+            width="30"
+            align="right"
+          ></el-table-column>
+          <el-table-column label="" width="1018"
+            ><template slot-scope="scope"
+              ><span class="questionRow" @click.stop="">
+                <el-tag type="success">问题</el-tag>
+                {{scope.row.value}}</span
+              >
+            </template>
+          </el-table-column>
+        </el-table>
+      </template>
+      <div class="input_btn">
+        <span class="resultCount"
+          >共<font color="#1288f6">{{selectCount}}</font>个问题</span
+        >
+        <div class="right_btn">
+          <el-link
+            type="primary"
+            @click.stop="previewChose"
+            class="previewChoseQa"
+          >
+            查看已选问答
+          </el-link>
+          <el-tooltip effect="dark" placement="top">
+            <div slot="content">
+              添加：{{nowSelection.length == 0 ? '无' : nowSelection.length}}
+            </div>
+            <el-badge :value="nowSelection.length" class="item">
+              <el-button @click="ctSendData" type="primary">添加</el-button>
+            </el-badge>
+          </el-tooltip>
+        </div>
+      </div>
+    </el-tab-pane>
+
+    <!-- 答复tab -->
+    <el-tab-pane label="选择答复" name="second" disabled>
+      <div class="nowQuestion" v-if="activeName == 'second'">
+        <el-link icon="el-icon-back" @click="removeCurRow()" :underline="false">
+          <el-tag type="success">
+            问题
+          </el-tag>
+          {{questionNow}}
+        </el-link>
+      </div>
+      <!-- 搜索框  -->
+      <el-form ref="resultForm" :model="resultForm">
+        <el-input
+          placeholder="请输入内容"
+          v-model="resultForm.input"
+          class=" input-with-select"
+          @keyup.enter.native="answerSearch"
+        >
+          <el-button
+            slot="append"
+            icon="el-icon-search"
+            @click="answerSearch"
+          ></el-button>
+        </el-input>
+        <!-- 标签栏  -->
+        <div class="search_by_types">
+          <el-checkbox v-model="resultChecked" @change="changeSearchWay(2)" style="margin-right: 10px;">
+            <b>基于标签搜索</b>
+          </el-checkbox>
+          <location-level
+            v-model="resultForm.value1show"
+            :ifDisabled="optionAnswer"
+            @change="changeResultArea"
+          >
+          </location-level>
+
+          <el-select
+            v-model="resultForm.value2"
+            placeholder="项目阶段"
+            size="small"
+            :disabled="optionAnswer"
+            @change="answerSearch"
+            filterable
+            clearable
+          >
+            <el-option
+              v-for="item in qaPhase"
+              :key="item"
+              :label="item.label"
+              :value="item.value"
+            >
+            </el-option>
+          </el-select>
+          <el-select
+            v-model="resultForm.value3"
+            placeholder="报告期"
+            size="small"
+            :disabled="optionAnswer"
+            @change="answerSearch"
+            filterable
+            clearable
+          >
+            <el-option
+              v-for="item in pickerOptions"
+              :key="item"
+              :value="item"
+            ></el-option>
+          </el-select>
+          <el-switch
+            v-model="resultForm.value4"
+            active-text="问答模板"
+            @change="answerSearch"
+            :disabled="optionAnswer"
+          ></el-switch>
+          <el-switch
+            v-model="ifSticked"
+            active-text="只看已钉"
+            @change="stick"
+            style="margin-left:10px"
+          ></el-switch>
+          <el-button @click="resetForm('resultForm')" class="reset" size="medium">重置</el-button>
+        </div>
+      </el-form>
+      <!-- 搜索结果 -->
+      <template>
+        <div style="overflow: hidden;z-index: 1000;" v-loading="answerLoading">
+          <!-- 左侧导航栏 -->
+          <div class="table_index">
+            <div
+              v-for="(item,index) in resultColumns"
+              :key="index"
+              class="stickDiv"
+              :class="{stickDivChose : index == stickDivChose,
+                         stickDivBacked : reserveAnswers.indexOf(index) > -1,
+                         stickDivClick : index == stickDivClick}"
+              @click="jumpToAnswer(index)"
+            >
+              <span>{{index+1}}</span>
+              <span
+                class="ifBacked"
+                v-if="reserveAnswers.indexOf(index) > -1"
+              ></span>
+              <span :class="{ifNow:index == stickDivClick}"></span>
+            </div>
+          </div>
+          <!-- 右侧搜索结果 -->
+          <div
+            style="left:40px;position:absolute;z-index:1;"
+            v-loading="answerLoading"
+          >
+            <el-checkbox-group v-model = "choseResultArr">
+              <el-table
+                :data="resultColumns"
+                tooltip-effect="dark"
+                :show-header="false"
+                class="search_result answer_r"
+                ref="tableScrollListener"
+                :height="resultHeight"
+                :row-class-name="rowShow"
+              >
+                <el-table-column label="" width="1005">
+                  <template slot-scope="scope">
+                    <div class="choose_com">
+                      <el-checkbox
+                        :label="scope.$index"
+                        @change="handleCurrentChange(scope.row,scope.$index)"
+                        class="satton"
+                        size="medium"
+                      ><span></span>
+                      </el-checkbox>
+                      <span>点击选择</span>
+                      <div
+                        @click="addReserve(scope.row,scope.$index)"
+                        class="batton"
+                        :class="{sticked:reserveAnswers.indexOf(scope.$index) > -1}"
+                      ></div>
+                      <span>点击钉住</span>
+                    </div>
+                    <div
+                      class="resultDiv"
+                      :style="{height:pdfHeight + 'px'}"
+                      :class="{blueBorder:scope.$index == stickDivChose}"
+                    >
+                    {{scope.row.answer_bytes}}
+                    </div>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </el-checkbox-group>
+          </div>
+        </div>
+      </template>
+      <div class="input_btn">
+        <span class="resultCount"
+          >共<font color="#1288f6">{{resultCount}}</font>个答案</span
+        >
+        <div class="right_btn">
+          <el-link
+            type="primary"
+            @click.stop="previewChose"
+            class="previewChoseQa"
+            v-if="selectModule == 0"
+          >
+            查看已选问答
+          </el-link>
+          <el-tooltip effect="dark" placement="top">
+            <div slot="content">
+              添加：{{nowSelection.length == 0 ? '无' : nowSelection.length}}
+            </div>
+            <el-badge :value="nowSelection.length" class="item">
+              <el-button @click="ctSendData" type="primary">添加</el-button>
+            </el-badge>
+          </el-tooltip>
+        </div>
+      </div>
+    </el-tab-pane>
+
+    <div>
+      <el-drawer
+        title="已选问答"
+        :visible.sync="resultChoseDrawer"
+        direction="rtl"
+        size="50%"
+        :append-to-body="true"
+        class="qaChoseDrawer"
+      >
+        <qaTable
+          :columns="selectTempList"
+          tableLabel="问答"
+          @sendData="deleteRow"
+        ></qaTable>
+      </el-drawer>
+    </div>
+  </el-tabs>
+</div>
